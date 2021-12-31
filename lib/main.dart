@@ -1,4 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_complete_guide/splash.dart';
+import 'package:flutter_complete_guide/widgets/chart.dart';
 import 'package:flutter_complete_guide/widgets/new_transaction.dart';
 import 'package:flutter_complete_guide/widgets/transaction_list.dart';
 
@@ -15,19 +18,39 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = ThemeData();
     return MaterialApp(
       title: 'Flutter App',
+      // theme: ThemeData(
+      //     primarySwatch: Colors.green,
+      //     accentColor: Colors.red,
+      //     fontFamily: 'Quicksand',
+      //     appBarTheme: AppBarTheme(
+      //       textTheme: const TextTheme(
+      //         headline6: TextStyle(
+      //           fontFamily: 'Quicksand',
+      //           fontSize: 50,
+      //           fontWeight: FontWeight.bold,
+      //         ),
+      //       ),
+      //     )),
       theme: ThemeData(
-          primarySwatch: Colors.green,
-          accentColor: Colors.red,
+          // colorScheme: theme.colorScheme.copyWith(secondary: Colors.red),
+          primaryColor: Colors.red,
           fontFamily: 'Quicksand',
-          appBarTheme: AppBarTheme(
-              textTheme: ThemeData.light().textTheme.copyWith(
-                  headline3: const TextStyle(
-                      fontFamily: "Merriweather",
-                      fontSize: 50,
-                      fontWeight: FontWeight.bold)))),
-      home: MyHomePage(),
+          colorScheme: theme.colorScheme
+              .copyWith(secondary: Colors.red, primary: Colors.red[400]),
+          textTheme: const TextTheme(
+              bodyText2: TextStyle(
+                  fontFamily: "Merriweather",
+                  fontSize: 20,
+                  color: Colors.blueGrey,
+                  fontWeight: FontWeight.bold),
+              headline6: TextStyle(
+                  fontFamily: "Merriweather",
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold))),
+      home: Splash(),
     );
   }
 }
@@ -43,12 +66,18 @@ class _MyHomePageState extends State<MyHomePage> {
   final titleController = TextEditingController();
 
   final amoutController = TextEditingController();
-  final List<Transaction> _userTransaction = [
-    Transaction(
-        id: 't1', title: "New Shoes", amount: 69.99, date: DateTime.now()),
-    Transaction(
-        id: 'tư', title: "Weekly Shoes", amount: 161.53, date: DateTime.now()),
+  final List<Transaction> _userTransactions = [
+    // Transaction(
+    //     id: 't1', title: "New Shoes", amount: 69.99, date: DateTime.now()),
+    // Transaction(
+    //     id: 'tư', title: "Weekly Shoes", amount: 161.53, date: DateTime.now()),
   ];
+  List<Transaction> get _recentTransactions {
+    return _userTransactions.where((tx) {
+      return tx.date.isAfter(DateTime.now().subtract(Duration(days: 7)));
+    }).toList();
+  }
+
   void _addNewTransaction(String txTitle, double txAmout) {
     final newTx = Transaction(
         id: DateTime.now().toString(),
@@ -56,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
         amount: txAmout,
         date: DateTime.now());
     setState(() {
-      _userTransaction.add(newTx);
+      _userTransactions.add(newTx);
     });
   }
 
@@ -89,7 +118,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: SingleChildScrollView(
-          child: TransactionList(transactions: _userTransaction)),
+          child: Column(
+        children: [
+          Chart(recentTransactions: _recentTransactions),
+          TransactionList(transactions: _userTransactions),
+        ],
+      )),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
