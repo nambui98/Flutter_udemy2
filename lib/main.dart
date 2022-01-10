@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_complete_guide/splash.dart';
 import 'package:flutter_complete_guide/widgets/chart.dart';
 import 'package:flutter_complete_guide/widgets/new_transaction.dart';
@@ -9,7 +10,12 @@ import 'package:intl/intl.dart';
 import 'models/transaction.dart';
 
 void main() {
-  runApp(const MyApp());
+  // WidgetsFlutterBinding.ensureInitialized();
+  // SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.portraitUp,
+  //   DeviceOrientation.portraitDown,
+  // ]);
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -40,7 +46,9 @@ class MyApp extends StatelessWidget {
           fontFamily: 'Quicksand',
           colorScheme: theme.colorScheme
               .copyWith(secondary: Colors.red, primary: Colors.red[400]),
+          errorColor: Colors.red[700],
           textTheme: const TextTheme(
+              button: TextStyle(color: Colors.white),
               bodyText2: TextStyle(
                   fontFamily: "Merriweather",
                   fontSize: 20,
@@ -78,12 +86,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }).toList();
   }
 
-  void _addNewTransaction(String txTitle, double txAmout) {
+  void _addNewTransaction(String txTitle, double txAmout, DateTime date) {
     final newTx = Transaction(
         id: DateTime.now().toString(),
         title: txTitle,
         amount: txAmout,
-        date: DateTime.now());
+        date: date);
     setState(() {
       _userTransactions.add(newTx);
     });
@@ -104,24 +112,44 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void _deleteTransaction(String id) {
+    setState(() {
+      _userTransactions.removeWhere((element) => element.id == id);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final appbar = AppBar(
+      title: const Text("Flutter App"),
+      actions: [
+        IconButton(
+            onPressed: () {
+              startAddNewTransaction(context);
+            },
+            icon: Icon(Icons.add))
+      ],
+    );
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Flutter App"),
-        actions: [
-          IconButton(
-              onPressed: () {
-                startAddNewTransaction(context);
-              },
-              icon: Icon(Icons.add))
-        ],
-      ),
+      appBar: appbar,
       body: SingleChildScrollView(
           child: Column(
         children: [
-          Chart(recentTransactions: _recentTransactions),
-          TransactionList(transactions: _userTransactions),
+          Container(
+              height: (MediaQuery.of(context).size.height -
+                      appbar.preferredSize.height -
+                      MediaQuery.of(context).padding.top) *
+                  0.3,
+              child: Chart(recentTransactions: _recentTransactions)),
+          Container(
+            height: (MediaQuery.of(context).size.height -
+                    appbar.preferredSize.height -
+                    MediaQuery.of(context).padding.top) *
+                0.7,
+            child: TransactionList(
+                transactions: _userTransactions,
+                deleteTransaction: _deleteTransaction),
+          ),
         ],
       )),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
