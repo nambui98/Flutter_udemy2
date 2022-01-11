@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_complete_guide/splash.dart';
 import 'package:flutter_complete_guide/widgets/chart.dart';
 import 'package:flutter_complete_guide/widgets/new_transaction.dart';
@@ -70,7 +71,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final titleController = TextEditingController();
 
   final amoutController = TextEditingController();
@@ -80,6 +81,24 @@ class _MyHomePageState extends State<MyHomePage> {
     // Transaction(
     //     id: 'tư', title: "Weekly Shoes", amount: 161.53, date: DateTime.now()),
   ];
+  bool _showChart = false;
+  @override
+  void initState() {
+    WidgetsBinding.instance!.addObserver(this);
+    super.initState();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state);
+  }
+
+  @override
+  dispose() {
+    WidgetsBinding.instance!.removeObserver(this);
+    super.dispose();
+  }
+
   List<Transaction> get _recentTransactions {
     return _userTransactions.where((tx) {
       return tx.date.isAfter(DateTime.now().subtract(Duration(days: 7)));
@@ -102,9 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context: ctx,
       builder: (_) {
         return GestureDetector(
-          onTap: () {
-            print("aaaaa");
-          },
+          onTap: () {},
           child: NewTransaction(addNewTransaction: _addNewTransaction),
           behavior: HitTestBehavior.opaque,
         );
@@ -118,8 +135,58 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  List<Widget> _buildLandscapeContent(
+      MediaQueryData mediaQuery, AppBar appbar, Widget txListWidget) {
+    return [
+      Container(
+        height: (mediaQuery.size.height -
+                appbar.preferredSize.height -
+                mediaQuery.padding.top) *
+            0.2,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Show Chart'),
+            Switch(
+              value: _showChart,
+              onChanged: (value) {
+                setState(() {
+                  _showChart = value;
+                });
+              },
+            )
+          ],
+        ),
+      ),
+      _showChart
+          ? Container(
+              height: (mediaQuery.size.height -
+                      appbar.preferredSize.height -
+                      mediaQuery.padding.top) *
+                  0.7,
+              child: Chart(recentTransactions: _recentTransactions))
+          : txListWidget
+    ];
+  }
+
+  List<Widget> _buildPortraitContent(
+      MediaQueryData mediaQuery, AppBar appbar, Widget txListWidget) {
+    return [
+      Container(
+          height: (mediaQuery.size.height -
+                  appbar.preferredSize.height -
+                  mediaQuery.padding.top) *
+              0.3,
+          child: Chart(recentTransactions: _recentTransactions)),
+      txListWidget
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
+    print('Build() MyHomePageState');
+    final mediaQuery = MediaQuery.of(context);
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
     final appbar = AppBar(
       title: const Text("Flutter App"),
       actions: [
@@ -130,26 +197,25 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.add))
       ],
     );
+    final txListWidget = Container(
+      height: (mediaQuery.size.height -
+              appbar.preferredSize.height -
+              mediaQuery.padding.top) *
+          0.7,
+      child: TransactionList(
+          transactions: _userTransactions,
+          deleteTransaction: _deleteTransaction),
+    );
     return Scaffold(
       appBar: appbar,
       body: SingleChildScrollView(
           child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-              height: (MediaQuery.of(context).size.height -
-                      appbar.preferredSize.height -
-                      MediaQuery.of(context).padding.top) *
-                  0.3,
-              child: Chart(recentTransactions: _recentTransactions)),
-          Container(
-            height: (MediaQuery.of(context).size.height -
-                    appbar.preferredSize.height -
-                    MediaQuery.of(context).padding.top) *
-                0.7,
-            child: TransactionList(
-                transactions: _userTransactions,
-                deleteTransaction: _deleteTransaction),
-          ),
+          if (isLandscape)
+            ..._buildLandscapeContent(mediaQuery, appbar, txListWidget),
+          if (!isLandscape)
+            ..._buildPortraitContent(mediaQuery, appbar, txListWidget),
         ],
       )),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

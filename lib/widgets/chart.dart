@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 
 class Chart extends StatelessWidget {
   final List<Transaction> recentTransactions;
-  const Chart({Key? key, required this.recentTransactions}) : super(key: key);
+  Chart({Key? key, required this.recentTransactions}) : super(key: key) {
+    print("Constructor Chart");
+  }
 
   List<Map<String, Object>> get groupedTransactionValues {
     return List.generate(7, (index) {
@@ -34,7 +36,7 @@ class Chart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(groupedTransactionValues);
+    print('build() chart');
     return Card(
       elevation: 6,
       margin: EdgeInsets.all(20),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_complete_guide/widgets/transaction_item.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 
@@ -10,53 +11,29 @@ class TransactionList extends StatelessWidget {
       : super(key: key);
   @override
   Widget build(BuildContext context) {
+    print('build() TransactionList');
     return transactions.isEmpty
-        ? Column(
-            children: [
-              Text(
-                "No data",
-                style: Theme.of(context).textTheme.headline6,
-              ),
-              SizedBox(
-                height: 10,
-              ),
-              Container(
-                  height: 200,
-                  child: Image.asset('assets/images/nodata-found.png'))
-            ],
-          )
+        ? LayoutBuilder(builder: (ctx, constraint) {
+            return Column(
+              children: [
+                Text(
+                  "No data",
+                  style: Theme.of(context).textTheme.headline6,
+                ),
+                SizedBox(
+                  height: constraint.maxHeight * 0.05,
+                ),
+                Container(
+                    height: constraint.maxHeight * 0.7,
+                    child: Image.asset('assets/images/nodata-found.png'))
+              ],
+            );
+          })
         : ListView.builder(
             itemBuilder: (ctx, index) {
-              return Card(
-                elevation: 5,
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: FittedBox(
-                        child: Text(
-                          '\$${transactions[index].amount}',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ),
-                  title: Text(
-                    transactions[index].title,
-                    style: Theme.of(context).textTheme.bodyText2,
-                  ),
-                  subtitle:
-                      Text(DateFormat.yMMMd().format(transactions[index].date)),
-                  trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      color: Theme.of(context).errorColor,
-                      onPressed: () =>
-                          deleteTransaction(transactions[index].id)),
-                ),
-              );
+              return TransactionItem(
+                  transaction: transactions[index],
+                  deleteTx: deleteTransaction);
             },
             itemCount: transactions.length);
     // (
